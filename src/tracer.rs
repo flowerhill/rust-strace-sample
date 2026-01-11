@@ -55,8 +55,6 @@ pub fn trace(_cmd: &str, _args: &[String]) -> Result<()> {
 
 #[cfg(all(test, target_os = "linux"))]
 mod tests {
-    use std::result;
-
     use super::*;
 
     #[test]

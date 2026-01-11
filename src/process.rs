@@ -36,10 +36,9 @@ pub fn spawn_tracee(_cmd: &str, _args: &[String]) -> Result<Pid> {
 #[cfg(all(test, target_os = "linux"))]
 mod tests {
     use core::panic;
-    use std::result;
 
     use super::*;
-    use nix::libc::SIGTRAP;
+
     use nix::sys::signal::Signal;
     use nix::sys::wait::{WaitStatus, waitpid};
 
