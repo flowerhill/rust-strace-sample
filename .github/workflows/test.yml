@@ -8,4 +8,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Enable ptrace
+        run: echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
       - run: cargo test --verbose
