@@ -11,13 +11,34 @@ use nix::sys::wait::WaitStatus;
 #[cfg(target_os = "linux")]
 use nix::sys::wait::waitpid;
 
+type SyscallNum = u64;
+type SyscallArgs = (u64, u64, u64);
+
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+fn get_syscall_number(regs: user_regs_struct) -> SyscallNum {
+    regs.orig_rax
+}
+
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+fn getsyscall_args(regs: user_regs_struct) -> SyscallArgs {
+    (regs.rdi, regs.rsi, regs.rdx)
+}
+
+#[cfg(all(target_os = "linux", target_arch = "aarch64"))]
+fn get_syscall_number(regs: &user_regs_struct) -> SyscallNum {
+    regs.regs[8]
+}
+
+#[cfg(all(target_os = "linux", target_arch = "aarch64"))]
+fn getsyscall_args(regs: &user_regs_struct) -> SyscallArgs {
+    (regs.regs[0], regs.regs[1], regs.regs[2])
+}
+
 #[cfg(target_os = "linux")]
 pub fn trace(cmd: &str, args: &[String]) -> Result<()> {
     let child = process::spawn_tracee(cmd, args)?;
 
     println!("Tracing PID: {}", child);
-
-    waitpid(child, None)?;
 
     loop {
         ptrace::syscall(child, None)?;
@@ -30,13 +51,11 @@ pub fn trace(cmd: &str, args: &[String]) -> Result<()> {
                 break;
             }
             WaitStatus::Stopped(_, _) => {
-                let user_regs_struct {
-                    rax, rdi, rsi, rdx, ..
-                } = ptrace::getregs(child)?;
+                let regs = ptrace::getregs(child)?;
+                let syscall_num = get_syscall_number(regs);
+                let (arg0, arg1, arg2) = getsyscall_args(regs);
 
-                if rax == syscalls::SYS_WRITE {
-                    println!("{}({}, {}, {})", syscalls::syscall_name(rax), rdi, rsi, rdx);
-                }
+                println!("syscall {syscall_num} ({arg0}, {arg1}, {arg2})");
 
                 ptrace::syscall(child, None)?;
                 waitpid(child, None)?;

@@ -11,7 +11,22 @@ use std::ffi::CString;
 #[cfg(target_os = "linux")]
 pub fn spawn_tracee(cmd: &str, args: &[String]) -> Result<Pid> {
     match unsafe { fork() }? {
-        ForkResult::Parent { child } => Ok(child),
+        ForkResult::Parent { child } => {
+            use anyhow::bail;
+            use nix::sys::wait::{WaitStatus, waitpid};
+
+            let status = waitpid(child, None)?;
+
+            match status {
+                WaitStatus::Stopped(_, _) => Ok(child),
+                WaitStatus::Exited(_, code) => bail!(
+                    "Failed to  execute '{}': child exited with code {}",
+                    cmd,
+                    code
+                ),
+                other => bail!("Unexpected child status: {:?}", other),
+            }
+        }
         ForkResult::Child => {
             ptrace::traceme()?;
 
