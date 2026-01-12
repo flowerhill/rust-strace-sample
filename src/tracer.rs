@@ -57,7 +57,10 @@ pub fn trace(cmd: &str, args: &[String]) -> Result<()> {
                 println!("syscall {syscall_num} ({arg0}, {arg1}, {arg2})");
 
                 ptrace::syscall(child, None)?;
-                waitpid(child, None)?;
+                if let Ok(WaitStatus::Exited(_, code)) = waitpid(child, None) {
+                    println!("Process exited with code : {code}");
+                    break;
+                };
             }
             _ => {}
         }
