@@ -5,9 +5,9 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    container:
+      image: rust:latest
+      options: --cap-add=SYS_PTRACE --security-opt seccomp=unconfined
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-      - name: Enable ptrace
-        run: echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
-      - run: cargo test --verbose -- --test-threads=1
+      - name: Run tests
+        run: cargo test --verbose -- --test-threads=1
