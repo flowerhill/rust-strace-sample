@@ -9,6 +9,15 @@ jobs:
       image: rust:latest
       options: --cap-add=SYS_PTRACE --security-opt seccomp=unconfined
     steps:
+      - name: Debug
+        run: |
+          echo "GitHub workspace: ${{ github.workspace }}"
+          echo "Current directory:"
+          pwd
+          echo "Files:"
+          ls -la
+          echo "Cargo.toml exists?"
+          cat Cargo.toml | head -5
       - name: Install git
         run: apt-get update && apt-get install -y git
       - name: Run tests
