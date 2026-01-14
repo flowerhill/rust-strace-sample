@@ -9,6 +9,7 @@ jobs:
       image: rust:latest
       options: --cap-add=SYS_PTRACE --security-opt seccomp=unconfined
     steps:
+      - name: Install git
+        run: apt-get update && apt-get install -y git
       - name: Run tests
-        working-directory: ${{ github.workspace }}
         run: cargo test --verbose -- --test-threads=1
