@@ -20,5 +20,6 @@ jobs:
           cat Cargo.toml | head -5
       - name: Install git
         run: apt-get update && apt-get install -y git
+      - uses: actions/checkout@v4
       - name: Run tests
         run: cargo test --verbose -- --test-threads=1
